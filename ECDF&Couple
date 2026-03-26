@@ -95,7 +95,7 @@
     "\n",
     "warnings.filterwarnings(\"ignore\", category=UserWarning)\n",
     "\n",
-    "# ----------------- 配置区 -----------------\n",
+
     "INPUT_FILE = \"predicted_log_values.xlsx\"\n",
     "DOCK_COL = \"Docking\"\n",
     "TOX_COLS = [ \"women_oral_TDLo\"]\n",
@@ -109,23 +109,23 @@
     "N_BOOT = 200\n",
     "CLIP_PROB = (1e-6, 1-1e-6)\n",
     "\n",
-    "# ----------------- 读取数据 -----------------\n",
+ 
     "df = pd.read_excel(INPUT_FILE)\n",
     "out = df.copy()\n",
     "\n",
-    "# ----------------- Docking 数据分析 -----------------\n",
+  
     "dock_vals = pd.to_numeric(out[DOCK_COL], errors='coerce').dropna()\n",
-    "print(\"=== Docking 数据描述 ===\")\n",
+   
     "print(dock_vals.describe())\n",
     "\n",
-    "# 正态性检验\n",
+  
     "stat_shapiro, p_shapiro = shapiro(dock_vals)\n",
     "stat_dagostino, p_dagostino = normaltest(dock_vals)\n",
     "print(f\"Shapiro-Wilk: W={stat_shapiro:.4f}, p={p_shapiro:.4g}\")\n",
     "print(f\"D'Agostino: K2={stat_dagostino:.4f}, p={p_dagostino:.4g}\")\n",
-    "print(f\"偏度(skew)={skew(dock_vals):.3f}, 峰度(kurtosis)={kurtosis(dock_vals):.3f}\")\n",
+    "print(f\"(skew)={skew(dock_vals):.3f}, 峰度(kurtosis)={kurtosis(dock_vals):.3f}\")\n",
     "\n",
-    "# 可视化分布 + 正态拟合\n",
+
     "plt.figure(figsize=(6,4))\n",
     "count, bins, _ = plt.hist(dock_vals, bins=30, density=True, alpha=0.6, color='steelblue', edgecolor='k')\n",
     "mu, sigma = np.mean(dock_vals), np.std(dock_vals)\n",
@@ -151,7 +151,7 @@
     "out['is_outlier'] = out['binding_robust_z'].abs() > 2\n",
     "print(f\"=== Docking Outliers (|z|>2) === {out['is_outlier'].sum()}\")\n",
     "\n",
-    "# 保留非异常值\n",
+  
     "z_vals_clean = out.loc[~out['is_outlier'], 'binding_robust_z']\n",
     "\n",
     "plt.figure(figsize=(6,4))\n",
@@ -167,19 +167,19 @@
     "plt.savefig(os.path.join(OUT_DIR, \"docking_zscore_clean_only.png\"), dpi=300)\n",
     "plt.show()\n",
     "\n",
-    "# ----------------- Toxicity 数据分析 -----------------\n",
+  
     "X = out[TOX_COLS].fillna(out[TOX_COLS].median())\n",
     "\n",
     "\n",
     "\n",
-    "# 去异常值\n",
+   
     "clf = IsolationForest(contamination=0.02, random_state=42)\n",
     "outliers = clf.fit_predict(X)\n",
     "X_clean = X[outliers == 1]\n",
     "clean_idx = X_clean.index\n",
-    "print(f\"总极端值个数 (toxicity): {np.sum(outliers==-1)}\")\n",
+    "print(f\" {np.sum(outliers==-1)}\")\n",
     "\n",
-    "# PCA 综合毒性\n",
+   
     "scaler = StandardScaler()\n",
     "X_scaled = scaler.fit_transform(X_clean)\n",
     "pca = PCA(n_components=1)\n",
@@ -187,14 +187,14 @@
     "if np.corrcoef(pc1, X_scaled.mean(axis=1))[0,1] < 0:\n",
     "    pc1 = -pc1\n",
     "explained_var_ratio = pca.explained_variance_ratio_[0]\n",
-    "print(f\"第一主成分解释的方差比例: {explained_var_ratio:.2%}\")\n",
+    "print(f\" {explained_var_ratio:.2%}\")\n",
     "pc1_vals = pc1\n",
     "\n",
     "plt.figure(figsize=(6,4))\n",
     "sns.histplot(pc1_vals, kde=True, bins=40)\n",
-    "plt.xlabel(\"PCA 综合毒性评分 (PC1)\")\n",
-    "plt.ylabel(\"数量\")\n",
-    "plt.title(\"PC1 分布图\")\n",
+    "plt.xlabel(\"PCA \")\n",
+    "plt.ylabel(\"NUM\")\n",
+    "plt.title(\"PC1 \")\n",
     "plt.tight_layout()\n",
     "plt.show()"
    ]
@@ -225,10 +225,10 @@
     "    (out.index.isin(X_clean.index))\n",
     "].index\n",
     "\n",
-    "# 1) 构造 PC1 Series（保持原样）\n",
+
     "pc1_series = pd.Series(pc1_vals, index=X_clean.index)\n",
     "\n",
-    "# 2) 对齐到 final_idx\n",
+
     "pc1_sub = pc1_series.loc[final_idx]\n",
     "\n",
     "# ======================================================\n",
